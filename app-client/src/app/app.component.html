@@ -1,0 +1,82 @@
+<mat-toolbar color="primary" class="mat-elevation-z8">
+  <span> Examples of HTTP Request </span>
+</mat-toolbar>
+
+<div fxLayout="row wrap" fxLayoutAlign="space-around start" fxLayoutGap="20px">
+  <mat-card fxFlex="30" class="mat-elevation-z8">
+    <mat-card-header>
+      <mat-card-title>Simple HTTP GET</mat-card-title>
+    </mat-card-header>
+    <mat-card-actions>
+      <button mat-button color="primary" (click)="getSimpleHttpRequest()">
+        <mat-icon>swap_vert</mat-icon> Send Request
+      </button>
+    </mat-card-actions>
+    <mat-card-content>
+      <mat-list *ngIf='simpleReqProductsObs$ | async as prods'>
+        <mat-list-item *ngFor="let p of prods">
+          <mat-icon mat-list-icon>shop</mat-icon>
+          <h4 mat-line>{{p.name}}</h4>
+          <p mat-line>Department:{{p.department}}</p>
+          <p mat-line>Price: {{p.price | currency:'R$'}}</p>
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card fxFlex="30" class="mat-elevation-z8">
+    <mat-card-header>
+      <mat-card-title>HTTP GET ERROR HANDLING</mat-card-title>
+    </mat-card-header>
+    <mat-card-actions>
+      <button mat-button color="accent" (click)="getProductsWithErrorHandling()">
+        <mat-icon>swap_vert</mat-icon> Error Request
+      </button>
+      <button mat-button color="primary" (click)="getProductsWithErrorHandlingOk()">
+        <mat-icon>swap_vert</mat-icon> Success Request
+      </button>
+    </mat-card-actions>
+    <mat-card-content>
+      <mat-list *ngIf="productsErrorHandling">
+        <mat-list-item *ngFor="let p of productsErrorHandling">
+          <mat-icon mat-list-icon>shop</mat-icon>
+          <h4 mat-line>{{p.name}}</h4>
+          <p mat-line>Department:{{p.department}}</p>
+          <p mat-line>Price: {{p.price | currency:'R$'}}</p>
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
+    <mat-card-footer>
+      <mat-progress-bar [color]="color" mode="query" *ngIf="bLoading"></mat-progress-bar>
+      </mat-card-footer>
+  </mat-card>
+  
+  
+  <mat-card fxFlex="30" class="mat-elevation-z8">
+    <mat-card-header>
+      <mat-card-title>Getting text from the server</mat-card-title>
+    </mat-card-header>
+    <mat-card-actions>
+      <button mat-button color="primary" (click)="getProductsIds()">
+        <mat-icon>swap_vert</mat-icon> Get IDs
+      </button>
+    </mat-card-actions>
+    <mat-card-content>
+      <mat-list>
+        <mat-list-item *ngFor="let p of productsId; let i=index">
+          <mat-icon mat-list-icon>shop</mat-icon>
+          <h4 mat-line *ngIf="p.name != '' ">{{p.name}}</h4>
+          <h4 mat-line *ngIf="p.name == '' ">{{i}}</h4>
+          <button *ngIf="p.name == '' " mat-icon-button (click)="loadName(p._id)">
+            <mat-icon >refresh</mat-icon>
+          </button>
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
+    <mat-card-footer>
+      <mat-progress-bar [color]="color" mode="query" *ngIf="bLoading"></mat-progress-bar>
+      </mat-card-footer>
+  </mat-card>
+
+
+</div>
