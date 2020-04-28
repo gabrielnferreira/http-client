@@ -7,11 +7,13 @@ import { MaterialModule } from './material.module';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
-import {FlexLayoutModule} from '@angular/flex-layout'
+import {FlexLayoutModule} from '@angular/flex-layout';
+import { DialogEditProductComponent } from './dialog-edit-product/dialog-edit-product.component'
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    DialogEditProductComponent
   ],
   imports: [
     BrowserModule,

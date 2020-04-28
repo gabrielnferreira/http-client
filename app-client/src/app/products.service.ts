@@ -34,7 +34,19 @@ export class ProductsService {
   getProductById(id: string): Observable<Product> {
     return this.http.get<Product>(`${this.url}/products/name/${id}`);
     // return this.http.get<Product>(`${this.url}/name/${id}`).pipe(map(p=>p.name));
+
   }
 
+  saveProduct(p: Product): Observable<Product> {
+    return this.http.post<Product>(`${this.url}/products`, p);
+  }
   
+  deleteProduct(p: Product) {
+    return this.http.delete(`${this.url}/products/${p._id}`);
+  }
+  
+  editProduct(p: Product): Observable<Product> {
+    return this.http.patch<Product>(`${this.url}/products/${p._id}`, p);
+  }
+
 }
