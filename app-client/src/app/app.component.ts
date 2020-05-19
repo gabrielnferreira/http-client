@@ -6,6 +6,14 @@ import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogEditProductComponent } from './dialog-edit-product/dialog-edit-product.component';
 
+
+export interface Sensor{
+  _id: String,
+  temperatura: Number,
+  pressao: Number,
+  date: Date
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -15,6 +23,7 @@ export class AppComponent {
 
   simpleReqProductsObs$: Observable<Product[]>;
   productsErrorHandling: Product[];
+  dataSensor: Sensor[];
   bLoading: boolean = false;
   color: string = "";
   productsId: Product[];
@@ -78,6 +87,27 @@ export class AppComponent {
       .subscribe(
         (prods) => {
           this.productsErrorHandling = prods;
+          let config = new MatSnackBarConfig();
+          config.duration = 2000;
+          config.panelClass = ['snack-ok'];
+          this.snackBar.open("Products succesfully loaded! ", '', config);
+          this.bLoading = false;
+        },
+        (err) => {
+          console.log(err);
+          this.bLoading = false;
+        }
+      )
+  }
+
+  getDataSensors() {
+    this.dataSensor = null;
+    this.color = "primary";
+    this.bLoading = true;
+    this.productsService.getDataSensor()
+      .subscribe(
+        (prods) => {
+          this.dataSensor = prods;
           let config = new MatSnackBarConfig();
           config.duration = 2000;
           config.panelClass = ['snack-ok'];

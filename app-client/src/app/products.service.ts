@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Product } from './models/Product.model';
+import { Sensor } from './app.component';
 
 
 
@@ -17,6 +18,9 @@ export class ProductsService {
 
   getProducts(): Observable<Product[]> {
     return this.http.get<Product[]>(`${this.url}/products`);
+  }
+  getDataSensor(): Observable<Sensor[]> {
+    return this.http.get<Sensor[]>(`${this.url}/sensors`);
   }
 
   getProductsError(): Observable<Product[]> {

@@ -13,6 +13,8 @@ mongoose.connect(
     'mongodb://localhost:27017/http_client',
     { useNewUrlParser: true, useUnifiedTopology: true });
 
+
+
 var myLogger = function (req, res, next) {
     next();
 }
@@ -29,6 +31,8 @@ app.get('/products', function (req, res) {
         }
     );
 });
+
+
 
 app.get('/productserr', function (req, res) {
     setTimeout(
@@ -97,25 +101,25 @@ app.delete('/products/:id', function (req, res) {
     Product.deleteOne(
         { _id: req.params.id },
         (err) => {
-            if(err)
+            if (err)
                 res.status(500).send(err);
-            else   
+            else
                 res.status(200).send({})
         })
 });
 
 app.patch('/products/:id', function (req, res) {
     Product.findById(req.params.id, (err, prod) => {
-        if(err)
+        if (err)
             res.status(500).send(err);
-        else if(!prod)
+        else if (!prod)
             res.status(404).send({});
         else {
             prod.name = req.body.name;
             prod.price = req.body.price;
             prod.department = req.body.department;
             prod.save((err, prod) => {
-                if(err)
+                if (err)
                     res.status(500).send(err);
                 else
                     res.status(200).send(prod);
