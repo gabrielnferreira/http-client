@@ -1,4 +1,5 @@
 const express = require('express');
+const socket = require('socket.io')
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -11,7 +12,7 @@ app.use(cors());
 
 
 mongoose.connect(
-    'mongodb://localhost:27017/testes',
+    'mongodb://localhost:27017/teste_socket',
     { useNewUrlParser: true, useUnifiedTopology: true });
 
 
@@ -22,16 +23,72 @@ var myLogger = function (req, res, next) {
 
 app.use(myLogger);
 
+
+const server = app.listen(3000, () => {
+    console.log('Started in 3000');
+});
+
+const io = socket(server);
+
+
+io.on('connection', (socket) => {
+    console.log('a user connected');
+
+    socket.on('chat message', (msg) => {
+        io.emit('chat message', msg);
+        console.log(msg);
+    });
+    socket.on('disconnect', (msg) => {
+        io.emit('chat message', msg);
+        console.log('user disconnected');
+    });
+});
+
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+    // io.emit('some event', { someProperty: 'some value', otherProperty: 'other value' });
+    io.emit('chat message', "qualquer coisa");
+
+
+});
+
+app.post('/', function (req, res) {
+    data = new Sensors({
+        date: req.body.date,
+        temp: req.body.temp,
+        press: req.body.press
+    });
+    data.save((err, prod) => {
+        if (err)
+            res.status(500).send(err);
+        else {
+            res.status(200).send(prod);
+            console.log(prod);
+            io.emit('chat message', data);
+
+        }
+    });
+});
+
 app.get('/sensors', function (req, res) {
+
+    Sensors.find({}).exec(
+        // Sensors.find().sort({ timestamp: 1 }).limit(3000).exec(
+        (err, prods) => {
+            if (err)
+                res.status(500).send(err);
+            else {
+
+                res.status(200).send(prods);
+            }
+        }
+    );
+});
+
+app.get('/sensors/maxTemp', function (req, res) {
     pipeline = [
-        {
-            $match: {
-                date: { $gte: 1590188400000, $lte: 1590200000000 }
-            },
-            // {
-            //     $and: [{ date: { $gte: 1590188400055} }, { date: { $lte: 1590288400070 } }]
-            // }             
-        },
+
         {
 
             $addFields: {
@@ -40,6 +97,15 @@ app.get('/sensors', function (req, res) {
                 }
             }
 
+        },
+        {
+            $match: {
+                date: { $gte: 1580601600000, $lte: 1580601600000 + 3599995 },
+                "temp": { $gte: 1 }
+            },
+            // {
+            //     $and: [{ date: { $gte: 1590188400055} }, { date: { $lte: 1590288400070 } }]
+            // }             
         },
         {
             $sort: {
@@ -52,20 +118,22 @@ app.get('/sensors', function (req, res) {
                 {
                     // minutes: { $minute: "$dateConverted" },
                     // seconds: {$second: "$dateConverted"},
-                    "hour": { "$hour": "$dateConverted" },
-                    "minute": {
-                        "$subtract": [
-                            { "$minute": "$dateConverted" },
-                            { "$mod": [{ "$minute": "$dateConverted" }, 10] }
-                        ]
-                    },
-                    "second": {
+                    "dayOfYear": { "$dayOfYear": "$dateConverted" },
+                    "hours": { "$hour": "$dateConverted" },
+                    "minutes": { "$minute": "$dateConverted" },
+                    "seconds": {
                         "$subtract": [
                             { "$second": "$dateConverted" },
                             { "$mod": [{ "$second": "$dateConverted" }, 10] }
                         ]
                     },
-                    milliseconds: { $millisecond: "$dateConverted" }
+                    // "milliseconds": {
+                    //     "$subtract": [
+                    //         { "$millisecond": "$dateConverted" },
+                    //         { "$mod": [{ "$millisecond": "$dateConverted" }, 500] }
+                    //     ]
+                    // },
+
                 },
                 count: {
                     $sum: 1
@@ -73,6 +141,7 @@ app.get('/sensors', function (req, res) {
                 // lista: { $push: { temp: "$temp" } },
                 maxTemp: { $first: "$temp" },
                 avgTemp: { $avg: "$temp" },
+                avgDate: { $avg: "$date" },
                 minTemp: { $last: "$temp" },
                 // firstTemp: { $first: "$temp" },
                 // lastTemp: { $last: "$temp" },
@@ -80,27 +149,113 @@ app.get('/sensors', function (req, res) {
                 minDate: { $last: "$date" }
             }
         },
-
         {
             $sort: {
                 maxDate: 1
             }
-        },
-
-
+        }
     ];
 
-    Sensors.aggregate(pipeline).limit(1000).exec(
-        // Sensors.find().sort({ timestamp: 1 }).limit(3000).exec(
-        (err, prods) => {
-            if (err)
-                res.status(500).send(err);
-            else {
+    Sensors.aggregate(pipeline)
+        // .limit(10000)
+        .exec(
+            // Sensors.find().sort({ timestamp: 1 }).limit(3000).exec(
+            (err, prods) => {
+                if (err)
+                    res.status(500).send(err);
+                else {
 
-                res.status(200).send(prods);
+                    res.status(200).send(prods);
+                }
+            }
+        );
+});
+
+
+
+app.get('/sensors/maxPress', function (req, res) {
+    pipeline = [
+
+        {
+
+            $addFields: {
+                dateConverted: {
+                    $toDate: "$date"
+                }
+            }
+
+        },
+        {
+            $match: {
+                date: { $gte: 1580601600000, $lte: 1580601600000 + 3599995 },
+                "press": { $gte: 0 }
+            },
+            // {
+            //     $and: [{ date: { $gte: 1590188400055} }, { date: { $lte: 1590288400070 } }]
+            // }             
+        },
+        {
+            $sort: {
+                "press": -1
+            }
+        },
+        {
+            $group: {
+                _id:
+                {
+                    // minutes: { $minute: "$dateConverted" },
+                    // seconds: {$second: "$dateConverted"},
+                    "dayOfYear": { "$dayOfYear": "$dateConverted" },
+                    "hours": { "$hour": "$dateConverted" },
+                    "minutes": { "$minute": "$dateConverted" },
+                    "seconds": {
+                        "$subtract": [
+                            { "$second": "$dateConverted" },
+                            { "$mod": [{ "$second": "$dateConverted" }, 10] }
+                        ]
+                    },
+                    // "milliseconds": {
+                    //     "$subtract": [
+                    //         { "$millisecond": "$dateConverted" },
+                    //         { "$mod": [{ "$millisecond": "$dateConverted" }, 500] }
+                    //     ]
+                    // },
+
+                },
+                count: {
+                    $sum: 1
+                },
+                // lista: { $push: { temp: "$temp" } },
+                maxPress: { $first: "$press" },
+                avgPress: { $avg: "$press" },
+                avgDate: { $avg: "$date" },
+                minPress: { $last: "$press" },
+                // firstTemp: { $first: "$temp" },
+                // lastTemp: { $last: "$temp" },
+                maxDate: { $first: "$date" },
+                minDate: { $last: "$date" }
+            }
+        },
+        {
+            $sort: {
+                maxDate: 1
             }
         }
-    );
+    ];
+
+    Sensors.aggregate(pipeline)
+        // .limit()
+        .exec(
+            // Sensors.find().sort({ timestamp: 1 }).limit(3000).exec(
+            (err, prods) => {
+                if (err)
+                    res.status(500).send(err);
+                else {
+
+                    res.status(200).send(prods);
+                }
+            }
+        );
 });
 
 // {temp:{$gte:350}
@@ -136,5 +291,3 @@ app.post('/sensors', function (req, res) {
 });
 
 
-
-app.listen(3000);
